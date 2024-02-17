@@ -1,20 +1,19 @@
 import cv2
 import apriltag
+import cammands
 
-capture = cv2.VideoCapture(0)
-detector = apriltag.apriltag("tag36h11")
+capture, detector = cammands.initialize_camera(0, "tag36h11")
 
-_, init_frame = capture.read()
-init_width = len(init_frame[0])
-width = init_width//2
-init_height = len(init_frame)
-height = init_height//2
-xoffset = width//2
-yoffset = height//2
-while True:
+crop_coords = cammands.get_crop_coords(capture, detector)
+
+key = None
+while key != ord("q"):
     _, raw_frame = capture.read()
 
-    frame = raw_frame[yoffset:(yoffset+height),xoffset:(xoffset+width)]
+    if key == ord("r"):
+        crop_coords = cammands.get_crop_coords(capture, detector)
+
+    frame = raw_frame[crop_coords]
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     raw_markers = detector.detect(gray)
@@ -23,7 +22,5 @@ while True:
         print(raw_markers)
 
     cv2.imshow("", frame)
-    key = cv2.waitKey(1)
 
-    if key == ord("q"):
-        exit()
+    key = cv2.waitKey(1)
