@@ -7,8 +7,10 @@ def initialize_camera(camera_id = 0, tag_type = "tag36h11"):
     This command is used to initialize the camera and detector
     TODO: add error handling
     """
+    print(f"Starting video capture...", end="\r")
     capture = cv2.VideoCapture(camera_id)
     detector = apriltag.apriltag(tag_type)
+    print(f"Succesfully started video capture!")
     return capture, detector
 
 def get_crop_coords(video_capture, apriltag_detector):
