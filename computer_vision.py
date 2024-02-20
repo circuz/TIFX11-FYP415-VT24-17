@@ -14,6 +14,8 @@ crop_coords = cammands.get_crop_coords(capture, detector)
 
 key = None
 
+#Johan
+
 def main_loop(i):
     if i%10 == 0:
         print(i)

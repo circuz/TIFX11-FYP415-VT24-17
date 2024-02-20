@@ -60,3 +60,8 @@ with connect(f"ws://{sys.argv[1]}:8266") as ws:
     print("Done!")
 
     ws.close_socket()
+
+aöksdbökaÖKDIT 
+AS
+'DLÄKABSFI 
+Aasdf
