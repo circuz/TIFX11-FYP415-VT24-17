@@ -23,6 +23,8 @@ def RandomWalk(M, startingPoint, nrSteps):
 def WalkLength(P, D):
     L = 0
     for i in range(len(P)-1):
+        if P[i] == -1:
+            break
         L = L + D[P[i]][P[i+1]]
     return L
 
@@ -121,15 +123,38 @@ def chooseBranch(P, p):
     return np.append(P,int(stat[1]))
 
 # Väljer en kant slumpmässigt men vägd med sannolikhets matrisen, endast 1 myra åt gången
-def chooseBranchRand(P,p):
-    li = np.array(range(0,len(p[0])), dtype=int)
-    for i in range(1,len(P)):
-        draw = np.random.choice(li, 1, True, p[P[i-1]])
-            # if draw == P[i-1]:
-            #     draw = chooseBranchRand(P,p)
-    return draw[0]
-    
+# Skicka med start-, slutpunkten, sannolikhetsmatrisen samt tom vandringsmatris och retunera vandringsmatrisen
+# Denna funktion har problemet att en myra kan fastna mellan två hörn och gå fram och tillbaka på en kant
+def chooseBranchRand(s0, f0, P, p):
+    P = P.transpose()
+    P[0] = s0
+    P = P.transpose()
+    li = np.array(range(0,len(p[0])), dtype=int)    # Alla kanter som finns i nätet
+    for ant in range(len(P)):
+        for step in range(1,len(P[ant])):                  # Varje steg
+            draw = np.random.choice(li, 1, True, p[P[ant,step-1]])
+            P[ant,step] = draw[0]        
+            if P[ant,step] == f0:
+                break
+    return P
 
+# Updatera formonspåret
+def updatePhermone(rho,Q,P,tau,goodAnt,length):
+    tau = (1-rho)*tau
+    for ant in goodAnt:
+        for step in range(1, len(P[ant])):
+            if step == -1:
+                break
+            tau[P[ant,step-1],P[ant,step]] = tau[P[ant,step-1],P[ant,step]] + Q/length[ant]
+    return tau
+
+# Hittar de myror som hittade till målet
+def goodAnts(P, f0):
+    goodAnt = np.array((),dtype=int)
+    for ant in range(len(P)):                    # Vi kolla på myra (nr) och fäljer dess väg
+        if P[ant,-1] == -1 or P[ant,-1] == f0:    # Kontrollera så att myra (nr) faktiskt kom till destinationen
+            goodAnt = np.append(goodAnt, ant)
+    return goodAnt
 
 # Prövnings matris
 M = np.array([[0, 1, 1, 1, 1],
@@ -142,20 +167,21 @@ D = np.array([[ 0., 80., 60., 50., 60.],
               [60., 40.,  0.,  0., 90.],
               [50.,  0.,  0.,  0., 70.],
               [60.,  0., 90., 70.,  0.]])
+W = D.copy()
+for row in range(len(W)):   # Skapar vikt matrisen
+    for col in range(len(W[row])):
+        if W[row,col] != 0:
+            W[row,col] = 1/W[row,col]
 T1 = np.array([1,2,3,4], dtype=int)
 T2 = np.array([1,2,3,5,6,2,4,5,3], dtype=int)
-#     0   1    2   3   4   5  6   7
-p = [[0, 0.2, 0.5, 0, 0.1, 0, 0, 0.2],
-     [0, 0.2, 0.5, 0, 0.1, 0, 0, 0.2],
-     [0, 0.2, 0.5, 0, 0.1, 0, 0, 0.2],
-     [0, 0.2, 0.5, 0, 0.1, 0, 0, 0.2],
-     [0, 0.2, 0.5, 0, 0.1, 0, 0, 0.2],
-     [0, 0.2, 0.5, 0, 0.1, 0, 0, 0.2],
-     [0, 0.2, 0.5, 0, 0.1, 0, 0, 0.2],
-     [0, 0.2, 0.5, 0, 0.1, 0, 0, 0.2]]
+alpha = 0.8
+beta = 1.1
+tau = M.copy()
+p = branchDecision(tau, W, alpha, beta)
 
-P = np.ones((1,8),dtype=int)[0]*-1
+s0 = 2
+f0 = 4
 
-P[0] = 2
+P = np.ones((1,8),dtype=int)*-1
+#print(chooseBranchRand(s0,f0,P,p))
 
-S = np.zeros((len(p[0])), dtype=int)
