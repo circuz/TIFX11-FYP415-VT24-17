@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import cammands
 
 
-capture, detector = cammands.initialize_camera(0, "tag36h11")
+capture, detector = cammands.initialize_camera(1, "tag36h11")
 
 crop_coords = cammands.get_crop_coords(capture, detector)
 
@@ -48,5 +48,6 @@ def main_loop(i):
 Below is the code for creating the figure using pyplot. This is also where we run main_loop.
 """
 fig1, ax1 = plt.subplots()
-ani = matplotlib.animation.FuncAnimation(fig1, main_loop, interval=50)
+ani = matplotlib.animation.FuncAnimation(fig1, main_loop, frames=100, repeat=False, interval=50)
 plt.show()
+print("Animation done!")
