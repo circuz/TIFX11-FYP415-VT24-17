@@ -8,17 +8,22 @@ import matplotlib.pyplot as plt
 import cammands
 
 
-capture, detector = cammands.initialize_camera(1, "tag36h11")
+try:
+    capture, detector = cammands.initialize_camera(0, "tag36h11")
+    crop_coords = cammands.get_crop_coords(capture, detector)
+except TypeError:
+    capture, detector = cammands.initialize_camera(1, "tag36h11")
+    crop_coords = cammands.get_crop_coords(capture, detector)
 
-crop_coords = cammands.get_crop_coords(capture, detector)
+print(crop_coords)
+
+
+plt.rcParams['axes.facecolor'] = 'black'
 
 key = None
 
-#Johan
-
 def main_loop(i):
-    if i%10 == 0:
-        print(i)
+    print(i)
     key = None
     if key == ord("q"):
         exit()
@@ -33,8 +38,12 @@ def main_loop(i):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     detected_tags = detector.detect(gray)
     if len(detected_tags) > 0:
+        pointsx = []
+        pointsy = []
         for tag in detected_tags:
-            plt.scatter(tag["center"][0],tag["center"][1])
+            pointsx.append(tag["center"][0])
+            pointsy.append(tag["center"][1])
+        plt.scatter(pointsx, pointsy, c='white', s=100)
 
 
 
@@ -42,7 +51,6 @@ def main_loop(i):
 
     key = cv2.waitKey(1)
 
-    plt.plot([1,2,3,4])
 
 """
 Below is the code for creating the figure using pyplot. This is also where we run main_loop.
