@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 import cammands
 
+CHEMOTAXI = True
 
 try:
     capture, detector = cammands.initialize_camera(0, "tag36h11")
@@ -17,12 +18,17 @@ except TypeError:
 
 print(crop_coords)
 
+_, frame = capture.read()
+gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+detected_tags = detector.detect(gray)
+tagids = { tag['id'] : [] for tag in detected_tags }
+df = pd.DataFrame(tagids)
+print(df)
 
-plt.rcParams['axes.facecolor'] = 'black'
 
 key = None
 
-def main_loop(i):
+def main_loop(i, df):
     print(i)
     key = None
     if key == ord("q"):
@@ -37,13 +43,23 @@ def main_loop(i):
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     detected_tags = detector.detect(gray)
-    if len(detected_tags) > 0:
-        pointsx = []
-        pointsy = []
+
+    # If there are any tags visible in the camera record them and we are doing chemotaxi, plot them!
+    if (len(detected_tags) > 0):
+        
+        if CHEMOTAXI:
+            pointsx = []
+            pointsy = []
+
         for tag in detected_tags:
-            pointsx.append(tag["center"][0])
-            pointsy.append(tag["center"][1])
-        plt.scatter(pointsx, pointsy, c='white', s=100)
+            xpoint = tag["center"][0]
+            ypoint = tag["center"][1]
+            name = tag["id"]
+            if CHEMOTAXI:
+                pointsx.append(xpoint)
+                pointsy.append(xpoint)
+            
+            plt.scatter(pointsx, pointsy, c='white', s=100)
 
 
 
@@ -56,6 +72,10 @@ def main_loop(i):
 Below is the code for creating the figure using pyplot. This is also where we run main_loop.
 """
 fig1, ax1 = plt.subplots()
-ani = matplotlib.animation.FuncAnimation(fig1, main_loop, frames=100, repeat=False, interval=50)
+
+if CHEMOTAXI:
+    ax1.set_facecolor('black')
+
+ani = matplotlib.animation.FuncAnimation(fig1, main_loop, frames=100, repeat=False, interval=50, fargs = (df))
 plt.show()
-print("Animation done!")
+print("We're done here!")
