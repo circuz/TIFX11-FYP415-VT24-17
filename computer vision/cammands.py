@@ -1,6 +1,6 @@
 import cv2
-import apriltag
 import numpy
+import apriltag
 
 def initialize_camera(camera_id = 0, tag_type = "tag36h11"):
     """
