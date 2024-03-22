@@ -1,23 +1,38 @@
 import numpy as np
 import asyncio
 
-def sweep(robot, direction_right ):
-    # Funktionen sveper den närliggande miljön.
-    # Svepningen kan göras i vänster eller höger riktning
-    # Retunera en matris med fermonnivåerna och vinklen/tiden att nå den riktningen
+# Funktionerna som kommer användas under kemotaxi experimentet
+def follow(robot):
+    # Funktion som skall följa ljus stråket
     
-    # Feromon matrisen med n stycken data punkter
-    n = 36  # Motsvaraa  ungefär 10 graders intervall
-    tau = np.zeros((2,n), dtype=float)
+    print('har följt')
 
-    # Sveper över intervallet
-    if direction_right: # Om svepningen skall ske i höger riktning
-        for i in n:
-            print(i)
-    else:
-        for i in n:
-            print(i)
+def trail_decision(robot):
+    # Funktionen som skall göra beslutet hurvida ljus spåret skall följas eller 
+    # om ett befintligt skall fortsättas följas 
 
+    print('har bestämt')
+    
+def colission(robot):
+    # Funktion som hanterar eventuella kollisioner
+
+    print('har kolliderat')
+
+def goal(robot):
+    # Funktion som hanterar vad som händer när målet har funnits
+    # Kan utvecklas om tid och intresse finns
+
+    print('hittat målet')
+
+def direction_decision(robot):
+    # Funktion som hanterar vilken riktning som roboten skall söka i
+
+    print('har valt riktning')
+
+def drive(robot):
+    # Funktion om hanterar körningen
+
+    print('har kört')
 
 async def run(robot):
     
