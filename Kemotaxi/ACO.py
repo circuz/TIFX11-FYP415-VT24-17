@@ -33,6 +33,17 @@ async def follow(robot, omega, OMEGA, delta, sigma, step):
         # Rotera vänster tills feromon koncentrationen minskat med delta
             await robot.motors.go_left()
             while sum(robot.color_sensors.left) < light_high*(1+delta):
+            # Undersöker om målet hittas
+            # Om hemmet är målet
+                if goal_home and (robot.color_sensors.left[1]>60000 and sum(robot.color_sensors.left)<70000):
+                    await robot.motors.stop()
+                    await goal(robot)
+                    return False
+            # Om maten är målet
+                elif not goal_home and (robot.color_sensors.left[2]>60000 and sum(robot.color_sensors.left)<70000):
+                    await robot.motors.stop()
+                    await goal(robot)
+                    return False
                 await asyncio.sleep(0.1)
             await robot.motors.stop()
         # Feromon koncentrationen är lägst utanför stråket
@@ -40,6 +51,7 @@ async def follow(robot, omega, OMEGA, delta, sigma, step):
         # Rotera höger tills feromon koncentrationen ökat med sigma
             await robot.motors.right()
             while sum(robot.color_sensors.left) > light_low*sigma:
+                
                 await asyncio.sleep(0.1)
         # Vandrat fram en period
             await robot.motors.stop()
