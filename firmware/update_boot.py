@@ -1,5 +1,10 @@
 import os
 import machine
+import neopixel
+
+status = neopixel.NeoPixel(machine.Pin(32), 1)
+status.fill((32, 32, 0))
+status.write()
 
 def recursive_delete(d):
     for file in os.listdir(d):
@@ -27,4 +32,6 @@ for filename, data in files:
             f.write(data)
 
 print("Update done, resetting")
+status.fill((0, 0, 0))
+status.write()
 machine.reset()

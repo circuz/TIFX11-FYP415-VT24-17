@@ -1,17 +1,17 @@
-import asyncio
-import webrepl
 import network
-
-# wifi setup
-sta_if = network.WLAN(network.STA_IF)
-sta_if.active(True)
-sta_if.connect("botnet", "roboting")
-
-webrepl.start(password="roboting")
+import webrepl
+import _thread
 
 
-async def main():
-    await asyncio.sleep(10)
+def init():
+    # wifi setup
+    sta_if = network.WLAN(network.STA_IF)
+    sta_if.active(True)
+    sta_if.connect("botnet", "roboting")
+
+    # webrepl setup
+    webrepl.start(password="roboting")
 
 
-asyncio.run(main())
+# init in separate thread so other code can run immediately
+_thread.start_new_thread(init, ())
