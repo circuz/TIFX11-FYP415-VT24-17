@@ -1,0 +1,33 @@
+@import "bootstrap/scss/bootstrap";
+
+body {
+    background-color: rgb(235, 235, 235);
+}
+
+.editing-container {
+    height: 30rem;
+}
+
+.editor {
+    background-color: white;
+}
+
+.files-list {
+    overflow: scroll;
+    max-height: 100%;
+}
+
+#main-editor {
+    height: 100%;
+}
+
+.cm-editor {
+    height: 100%;
+}
+
+.robotcard {
+    .robotcanvas {
+        width: 11rem;
+        height: 11rem;
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "scripts": {
+    "build": "webpack build",
+    "serve": "webpack serve --mode development"
+  },
+  "dependencies": {
+    "@codemirror/lang-python": "^6.1.4",
+    "bootstrap": "^5.3.2",
+    "codemirror": "^6.0.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.17",
+    "css-loader": "^6.10.0",
+    "html-webpack-plugin": "^5.6.0",
+    "postcss-loader": "^8.1.0",
+    "sass": "^1.71.0",
+    "sass-loader": "^14.1.0",
+    "style-loader": "^3.3.4",
+    "webpack": "^5.90.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.2"
+  }
+}
