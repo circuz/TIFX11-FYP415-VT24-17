@@ -5,31 +5,33 @@ import struct
 import neopixel
 import asyncio
 
-PIN_COLOR_SENSOR_LEFT_SDA = 25
-PIN_COLOR_SENSOR_LEFT_SCL = 4
-PIN_COLOR_SENSOR_RIGHT_SDA = 14
-PIN_COLOR_SENSOR_RIGHT_SCL = 26
+PIN_COLOR_SENSOR_LEFT_SDA = const(25)
+PIN_COLOR_SENSOR_LEFT_SCL = const(4)
+PIN_COLOR_SENSOR_RIGHT_SDA = const(14)
+PIN_COLOR_SENSOR_RIGHT_SCL = const(26)
 
-PIN_BUMPER_FRONT = 35
-PIN_BUMPER_BACK = 36
-PIN_BUMPER_LEFT = 33
-PIN_BUMPER_RIGHT = 39
+PIN_BUMPER_FRONT = const(35)
+PIN_BUMPER_BACK = const(36)
+PIN_BUMPER_LEFT = const(33)
+PIN_BUMPER_RIGHT = const(39)
 
-PIN_BUMPER_DRIVE_FRONT = 21
-PIN_BUMPER_DRIVE_BACK = 23
-PIN_BUMPER_DRIVE_LEFT = 19
-PIN_BUMPER_DRIVE_RIGHT = 22
+PIN_BUMPER_DRIVE_FRONT = const(21)
+PIN_BUMPER_DRIVE_BACK = const(23)
+PIN_BUMPER_DRIVE_LEFT = const(19)
+PIN_BUMPER_DRIVE_RIGHT = const(22)
 
-PIN_MOTOR_LEFT = 16
-PIN_MOTOR_RIGHT = 27
+PIN_MOTOR_LEFT = const(16)
+PIN_MOTOR_RIGHT = const(27)
 
-PIN_LED_COMS = 13
-PIN_LED_STATUS = 32
+PIN_LED_COMS = const(13)
+PIN_LED_STATUS = const(32)
 
 
 class ColorSensors:
     left = (0, 0, 0)
     right = (0, 0, 0)
+
+    task = None
 
     def __init__(self):
         self.i2c_left = machine.SoftI2C(
@@ -41,9 +43,9 @@ class ColorSensors:
         # enable sensor
         self.i2c_left.writeto_mem(16, 0, b"\x00\x00")
         self.i2c_right.writeto_mem(16, 0, b"\x00\x00")
-        _thread.start_new_thread(self.update, ())
+        self.task = asyncio.create_task(self.update())
 
-    def update(self):
+    async def update(self):
         while True:
             self.left = (
                 struct.unpack("<H", self.i2c_left.readfrom_mem(16, 5, 2, addrsize=8))[
@@ -67,7 +69,7 @@ class ColorSensors:
                     0
                 ],
             )
-            time.sleep_ms(100)
+            await asyncio.sleep(0.1)
 
 
 class Bumpers:
@@ -83,6 +85,8 @@ class Bumpers:
     drive_left = None
     drive_right = None
 
+    task = None
+
     def __init__(self):
         self.pin_front = machine.Pin(PIN_BUMPER_DRIVE_FRONT, machine.Pin.IN)
         self.pin_back = machine.Pin(PIN_BUMPER_DRIVE_BACK, machine.Pin.IN)
@@ -92,9 +96,7 @@ class Bumpers:
         self.adc_back = machine.ADC(PIN_BUMPER_BACK, atten=machine.ADC.ATTN_11DB)
         self.adc_left = machine.ADC(PIN_BUMPER_LEFT, atten=machine.ADC.ATTN_11DB)
         self.adc_right = machine.ADC(PIN_BUMPER_RIGHT, atten=machine.ADC.ATTN_11DB)
-
-    async def init(self):
-        asyncio.create_task(self.update())
+        self.task = asyncio.create_task(self.update())
 
     async def update(self):
         while True:
@@ -177,21 +179,16 @@ class Motors:
 
 class LEDs:
     coms = (0, 0, 0)
-    status = (0, 0, 0)
 
     def __init__(self):
         self.coms = neopixel.NeoPixel(machine.Pin(PIN_LED_COMS), 1)
-        self.status = neopixel.NeoPixel(machine.Pin(PIN_LED_STATUS), 1)
-        self.set_coms((0, 0, 0))
-        self.set_status((0, 0, 0))
+
+    async def clear(self):
+        await self.set_coms((0, 0, 0))
 
     async def set_coms(self, value):
         self.coms.fill(value)
         self.coms.write()
-
-    async def set_status(self, value):
-        self.status.fill(value)
-        self.status.write()
 
 
 class Robot:
@@ -202,4 +199,13 @@ class Robot:
         self.leds = LEDs()
 
     async def init(self):
-        await self.bumpers.init()
+        await self.leds.clear()
+
+    async def stop(self):
+        if self.bumpers.task:
+            self.bumpers.task.cancel()
+        if self.color_sensors.task:
+            self.color_sensors.task.cancel()
+
+        await self.motors.stop()
+        await self.leds.clear()

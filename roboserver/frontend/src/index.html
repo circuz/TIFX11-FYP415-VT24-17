@@ -12,57 +12,30 @@
         <h1 class="mb-3 mt-2">Robot control panel</h1>
         <div class="editing-container d-flex mb-3">
             <div class="flex-grow-1 d-flex flex-column me-3">
-                <input type="text" class="form-control mb-3" placeholder="Program name">
+                <input type="text" id="progname" class="form-control mb-3" placeholder="Program name">
                 <div class="editor" id="main-editor"></div>
             </div>
             <div class="d-flex flex-column">
                 <div class="btn-group mb-3">
-                    <button type="button" class="btn btn-primary">Run</button>
-                    <button type="button" class="btn btn-danger">Stop</button>
+                    <button type="button" id="upload-button" class="btn btn-primary">Upload</button>
+                    <button type="button" id="action-button" class="btn btn-success">Run</button>
                 </div>
-                <div class="files-list list-group">
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">aaaaaaaaaaaaaaaa</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
-                    <button type="button" class="list-group-item list-group-item-action">backup.py</button>
+                <div>
+                    Status: <span id="status" class="badge text-bg-secondary">Stopped</span>
+                    <br>
+                    Updated bots: <span id="updated" class="badge text-bg-secondary">0/0</span>
                 </div>
             </div>
         </div>
         <div id="robotcard-container" class="d-flex flex-wrap mb-3">
             <template id="robot-template">
                 <div class="robotcard card">
-                    <canvas class="robotcanvas p-3"></canvas>
-                    <div class="card-body pt-0">
+                    <!-- <canvas class="robotcanvas p-3"></canvas> -->
+                    <div class="card-body">
+                    <!-- <div class="card-body pt-0"> -->
                         <h5 class="robot-name card-title"></h5>
                         <div class="d-flex flex-column align-items-center">
-                            <span class="robot-status badge text-bg-success mb-1"></span>
+                            <span class="robot-status badge mb-1 text-bg-success"></span>
                             <span class="robot-lastcontact badge text-bg-secondary mb-1" title="Last contact"></span>
                         </div>
                     </div>

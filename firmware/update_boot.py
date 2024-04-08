@@ -13,7 +13,7 @@ def recursive_delete(d):
             recursive_delete(path)
             print("Deleting directory", path)
             os.unlink(path)
-        elif path not in ["/boot.py", "/webrepl_cfg.py"]:
+        elif path not in ["/boot.py", "/state"]:
             print("Deleting file", path)
             os.unlink(path)
 

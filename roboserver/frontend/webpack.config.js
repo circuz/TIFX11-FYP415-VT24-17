@@ -8,7 +8,8 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: './src/index.html'
+            template: './src/index.html',
+            // publicPath: '/static',
         }),
     ],
     output: {
@@ -17,9 +18,15 @@ module.exports = {
         clean: true,
     },
     devServer: {
-        static: path.resolve(__dirname, 'dist'),
-        port: 8080,
-        hot: true
+        port: 8081,
+        hot: true,
+        proxy: [
+            {
+                context: ['/user_ws'],
+                target: 'http://127.0.0.1:8080',
+                ws: true,
+            },
+        ],
     },
     performance: {
         hints: false,

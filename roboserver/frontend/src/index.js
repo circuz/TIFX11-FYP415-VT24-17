@@ -1,13 +1,16 @@
 import "./styles.scss"
 
-import { basicSetup, EditorView } from "codemirror"
+import { basicSetup } from "codemirror"
+import { EditorView, keymap } from "@codemirror/view"
+import { indentWithTab } from "@codemirror/commands"
+import { indentUnit } from "@codemirror/language"
 import { python } from "@codemirror/lang-python"
 import * as bootstrap from 'bootstrap'
 
 
-new EditorView({
-    doc: 'print("Hello world!")\n',
-    extensions: [basicSetup, python()],
+let editor = new EditorView({
+    doc: 'Loading...',
+    extensions: [basicSetup, keymap.of([indentWithTab]), indentUnit.of("    "), python()],
     parent: document.getElementById("main-editor"),
 })
 
@@ -176,31 +179,149 @@ function updateRobot(state) {
     }
 
     let statustag = robotcard.getElementsByClassName("robot-status")[0]
+    statustag.classList.remove("text-bg-success", "text-bg-warning", "text-bg-danger")
     statustag.innerHTML = state.status
-    if (state.status === "Running") {
-        statustag.classList.replace("text-bg-warning", "text-bg-success")
-    } else {
-        statustag.classList.replace("text-bg-success", "text-bg-warning")
+    switch (state.status) {
+        case "Running":
+            statustag.classList.add("text-bg-success")
+            break
+        case "Stopped":
+            statustag.classList.add("text-bg-warning")
+            break
+        case "Experiment error":
+        case "Experiment exited":
+            statustag.classList.add("text-bg-danger")
+            break
+        default:
+            statustag.classList.add("text-bg-secondary")
     }
-    robotcard.getElementsByClassName("robot-lastcontact")[0].innerHTML = state.lastContact
+    let d = new Date(state.lastContact)
+    robotcard.getElementsByClassName("robot-lastcontact")[0].innerHTML = d.toISOString()
 
-    drawRobot(robotcard.getElementsByClassName("robotcanvas")[0].getContext("2d"), state)
+    // drawRobot(robotcard.getElementsByClassName("robotcanvas")[0].getContext("2d"), state)
 }
 
-updateRobot({
-    id: 1,
-    name: "Bingus",
-    status: "Running",
-    lastContact: "2023-02-19 00:00:00",
-    leftBumber: true,
-    frontBumper: false,
-    rightBumper: false,
-    backBumper: false,
-    leftMotor: 128,
-    rightMotor: 200,
-    comsLED: 0x00ff00,
-    statusLED: 0xff0000,
-    leftSensor: 0x0000ff,
-    rightSensor: 0x0000ff,
+function refreshState() {
+    let button = document.getElementById("action-button")
+
+    button.classList.remove("btn-success", "btn-danger")
+
+    if (state.experiment_running) {
+        button.classList.add("btn-danger")
+        button.innerHTML = "Stop"
+    } else {
+        button.classList.add("btn-success")
+        button.innerHTML = "Run"
+    }
+
+    let statusbadge = document.getElementById("status")
+    statusbadge.classList.remove("text-bg-success", "text-bg-danger")
+    statusbadge.innerHTML = (state.experiment_running) ? "Running" : "Stopped"
+    statusbadge.classList.add((state.experiment_running) ? "text-bg-success" : "text-bg-danger")
+
+    let updatedbadge = document.getElementById("updated")
+    updatedbadge.classList.remove("text-bg-success", "text-bg-warning")
+    let updated_bots = Object.values(robots).filter((r) => {return r.experiment_hash === state.experiment_hash}).length
+    let total_bots = Object.values(robots).length
+    updatedbadge.classList.add((total_bots === updated_bots) ? "text-bg-success" : "text-bg-warning")
+    updatedbadge.innerHTML = `${updated_bots}/${total_bots}`
+}
+
+// updateRobot({
+//     id: 1,
+//     name: "Bingus",
+//     status: "Running",
+//     lastContact: "2023-02-19 00:00:00",
+//     leftBumber: true,
+//     frontBumper: false,
+//     rightBumper: false,
+//     backBumper: false,
+//     leftMotor: 128,
+//     rightMotor: 200,
+//     comsLED: 0x00ff00,
+//     statusLED: 0xff0000,
+//     leftSensor: 0x0000ff,
+//     rightSensor: 0x0000ff,
+// })
+
+let robots = {}
+let state = {}
+
+const protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://'
+const host = location.hostname
+const port = (location.port) ? `:${location.port}` : ''
+
+let ws = new WebSocket(`${protocol}${host}${port}/user_ws`)
+
+ws.onopen = function (event) {
+    console.log("Websocket connected")
+}
+
+ws.onclose = function (event) {
+    // set background color to red to alert about ws failing
+    document.getRootNode().children[0].children[1].style = "background-color: rgb(255, 128, 128) !important"
+}
+
+ws.onmessage = function (event) {
+    const message = JSON.parse(event.data)
+    console.log(message)
+    switch (message.type) {
+        case 'init':
+            editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: message["code"] } })
+            break
+        case 'telemetry':
+            robots[message.name] = {
+                id: message.name,
+                name: message.name,
+                status: { 2: "Running", 3: "Stopped", 4: "Experiment error", 5: "Experiment exited" }[message.state],
+                experiment_hash: message.experiment_hash,
+                lastContact: Date.now(),
+                leftBumber: true,
+                frontBumper: false,
+                rightBumper: false,
+                backBumper: false,
+                leftMotor: 128,
+                rightMotor: 200,
+                comsLED: 0x00ff00,
+                statusLED: 0xff0000,
+                leftSensor: 0x0000ff,
+                rightSensor: 0x0000ff,
+            }
+            updateRobot(robots[message.name])
+            refreshState()
+            break
+        case 'state':
+            state.experiment_running = message.experiment_running
+            state.experiment_hash = message.experiment_hash
+            refreshState()
+            break
+        default:
+            console.error('unknown message type recieved', message)
+    }
+}
+
+window.onbeforeunload = function () {
+    // prevent the screen from flashing red
+    ws.onclose = function () { }
+    ws.close()
+}
+
+document.getElementById("upload-button").addEventListener("click", function () {
+    ws.send(JSON.stringify({
+        type: "upload",
+        filename: document.getElementById("progname").value,
+        code: editor.state.doc.toString(),
+    }))
 })
 
+document.getElementById("action-button").addEventListener("click", function () {
+    if (state.experiment_running) {
+        ws.send(JSON.stringify({
+            type: "stop",
+        }))
+    } else {
+        ws.send(JSON.stringify({
+            type: "run",
+        }))
+    }
+})
