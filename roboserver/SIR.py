@@ -50,10 +50,20 @@ async def run(robot):
     about_me_file = open("about_me", "r+")
     role = about_me_file.readlines()[0]
     
+    if role not in ("S", "I", "R"):
+        role = "S"
     if role == "S": #Succeptible
         await robot.leds.set_coms((0, 0, 255))
+        robot.bumpers.drive_front = False
+        robot.bumpers.drive_back = False
+        robot.bumpers.drive_left = False
+        robot.bumpers.drive_right = False
     if role == "I": #Infected
         await robot.leds.set_coms((0, 255, 0))
+        robot.bumpers.drive_front = True
+        robot.bumpers.drive_back = True
+        robot.bumpers.drive_left = True
+        robot.bumpers.drive_right = True
     if role == "R": #Recovered
         await robot.leds.set_coms((255, 0, 0))
 
