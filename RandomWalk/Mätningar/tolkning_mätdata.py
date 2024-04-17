@@ -48,4 +48,3 @@ def plot_paths(data_points, names_to_plot):
 # print(data_points)
 names_to_plot = ['21']  # Update this list with the names you want to plot
 plot_paths(data_points, names_to_plot)
-
