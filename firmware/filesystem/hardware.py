@@ -26,6 +26,8 @@ PIN_MOTOR_RIGHT = const(27)
 PIN_LED_COMS = const(13)
 PIN_LED_STATUS = const(32)
 
+WS_EXPERIMENT_MESSAGE = const(b"\x0c")
+
 
 class ColorSensors:
     left = (0, 0, 0)
@@ -192,11 +194,14 @@ class LEDs:
 
 
 class Robot:
-    def __init__(self):
+    def __init__(self, send_queue, name):
         self.color_sensors = ColorSensors()
         self.bumpers = Bumpers()
         self.motors = Motors()
         self.leds = LEDs()
+
+        self.send_queue = send_queue
+        self.name = name
 
     async def init(self):
         await self.leds.clear()
@@ -209,3 +214,6 @@ class Robot:
 
         await self.motors.stop()
         await self.leds.clear()
+
+    async def print(self, string):
+        self.send_queue.append(WS_EXPERIMENT_MESSAGE + str(string).encode())

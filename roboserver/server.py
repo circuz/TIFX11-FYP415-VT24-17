@@ -1,8 +1,11 @@
 import os
+import time
 import struct
 import hashlib
 import asyncio
 import datetime
+import shutil
+import json
 from pathlib import Path
 from aiohttp import web
 
@@ -18,6 +21,7 @@ WS_TELEMETRY = b"\x08"
 WS_EXPERIMENT_START = b"\x09"
 WS_EXPERIMENT_STOP = b"\x0a"
 WS_RENAME = b"\x0b"
+WS_EXPERIMENT_MESSAGE = b"\x0c"
 
 STATE_INIT = 1
 STATE_RUNNING = 2
@@ -27,7 +31,8 @@ STATE_EXITED = 5
 
 static_path = Path("frontend/dist")
 experiment_path = Path("experiment.py")
-backup_path = Path("backups")
+experiment_data_path = Path("experiments")
+current_experiment_data_path = None
 
 routes = web.RouteTableDef()
 
@@ -78,14 +83,16 @@ class UserSocket:
                 ):
                     try:
                         e = self.sender_task.exception()
-                        print(repr(e))
-                        raise e
+                        if e:
+                            print(repr(e))
+                            raise e
                     except asyncio.exceptions.InvalidStateError:
                         pass
                     try:
                         e = self.receiver_task.exception()
-                        print(repr(e))
-                        raise e
+                        if e:
+                            print(repr(e))
+                            raise e
                     except asyncio.exceptions.InvalidStateError:
                         pass
 
@@ -100,22 +107,28 @@ class UserSocket:
             await self.ws.send_json(msg)
 
     async def receiver(self):
-        global experiment_running
+        global experiment_running, current_experiment_data_path
         async for msg in self.ws:
             data = msg.json()
 
             if data["type"] == "upload":
                 if data["code"] != experiment_path.read_text():
                     experiment_path.write_text(data["code"])
-                    (
-                        backup_path
-                        / f'{data["filename"]}-{datetime.datetime.now().isoformat()}'
-                    ).write_text(data["code"])
 
                     await send_to_robots(WS_EXPERIMENT_UPLOAD_START)
                 await self.q.put(await create_state_dict())
 
             if data["type"] == "run":
+                current_experiment_data_path = (
+                    experiment_data_path
+                    / f'{data["filename"]}-{datetime.datetime.now().isoformat()}'
+                )
+                current_experiment_data_path.mkdir()
+                shutil.copy(
+                    experiment_path, current_experiment_data_path / "experiment.py"
+                )
+                print(f"starting experiment {current_experiment_data_path.name}")
+
                 experiment_running = True
                 await self.q.put(await create_state_dict())
                 await send_to_robots(WS_EXPERIMENT_START)
@@ -124,6 +137,7 @@ class UserSocket:
                 experiment_running = False
                 await self.q.put(await create_state_dict())
                 await send_to_robots(WS_EXPERIMENT_STOP)
+                print("stopped experiment")
 
 
 @routes.get("/user_ws")
@@ -137,7 +151,6 @@ async def user_ws(request):
         {
             "type": "init",
             "code": experiment_path.read_text(),
-            # "files": [path.name for path in backup_path.glob("*")],
         }
     )
 
@@ -179,7 +192,20 @@ class RoboSocket:
                     or self.receiver_task.done()
                     or self.ws.closed
                 ):
-                    break
+                    try:
+                        e = self.sender_task.exception()
+                        if e:
+                            print(repr(e))
+                            raise e
+                    except asyncio.exceptions.InvalidStateError:
+                        pass
+                    try:
+                        e = self.receiver_task.exception()
+                        if e:
+                            print(repr(e))
+                            raise e
+                    except asyncio.exceptions.InvalidStateError:
+                        pass
 
                 await asyncio.sleep(0.05)
         finally:
@@ -191,13 +217,14 @@ class RoboSocket:
             msg = await self.q.get()
             if msg == WS_EXPERIMENT_UPLOAD_START:
                 self.upload_counter = 0
+                self.uploading = True
                 self.experiment_code = experiment_path.read_bytes()
             await self.ws.send_bytes(msg)
 
     async def receiver(self):
         async for msg in self.ws:
 
-            if msg.data[0] == ord(WS_EXPERIMENT_UPLOAD_CONTINUE):
+            if msg.data[0] == ord(WS_EXPERIMENT_UPLOAD_CONTINUE) and self.uploading:
                 chunk = self.experiment_code[
                     self.upload_counter * 1024 : (self.upload_counter + 1) * 1024
                 ]
@@ -235,13 +262,30 @@ class RoboSocket:
                         f"{self.request.match_info['name']} uploading new code to robot"
                     )
                     await self.q.put(WS_EXPERIMENT_UPLOAD_START)
-                    self.uploading = True
 
                 if experiment_running and state == STATE_STOPPED:
                     await self.q.put(WS_EXPERIMENT_START)
 
                 if not experiment_running and state == STATE_RUNNING:
                     await self.q.put(WS_EXPERIMENT_STOP)
+
+            elif msg.data[0] == ord(WS_EXPERIMENT_MESSAGE):
+                with (
+                    current_experiment_data_path / self.request.match_info["name"]
+                ).open("a") as f:
+                    f.write(
+                        json.dumps(
+                            {
+                                "type": "message",
+                                "message": msg.data[1:].decode(),
+                                "time": time.time(),
+                            }
+                        )
+                    )
+                    f.write("\n")
+                print(
+                    f"experiment message from robot {self.request.match_info['name']}: {msg.data[1:]}"
+                )
 
             else:
                 print(
@@ -272,7 +316,6 @@ async def robo_ws(request):
 
 
 routes.static("/", static_path)
-routes.static("/backups", backup_path)
 
 app = web.Application()
 app.add_routes(routes)

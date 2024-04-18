@@ -322,6 +322,7 @@ document.getElementById("action-button").addEventListener("click", function () {
     } else {
         ws.send(JSON.stringify({
             type: "run",
+            filename: document.getElementById("progname").value,
         }))
     }
 })

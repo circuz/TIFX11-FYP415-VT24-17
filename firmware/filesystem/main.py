@@ -24,6 +24,7 @@ WS_TELEMETRY = const(b"\x08")
 WS_EXPERIMENT_START = const(b"\x09")
 WS_EXPERIMENT_STOP = const(b"\x0a")
 WS_RENAME = const(b"\x0b")
+# WS_EXPERIMENT_MESSAGE = const(b"\x0c")
 
 STATE_INIT = const(1)
 STATE_RUNNING = const(2)
@@ -171,6 +172,7 @@ async def ws_sender(ws):
     while True:
         if len(send_queue) > 0:
             m = send_queue.popleft()
+            print("sending", repr(m))
             await ws.send(m)
 
         await asyncio.sleep(0.1)
@@ -235,7 +237,7 @@ async def experiment_wrapper():
     except Exception as e:
         return e
 
-    robot = Robot()
+    robot = Robot(send_queue, persistent_state["name"])
     await robot.init()
 
     try:
@@ -272,7 +274,7 @@ async def main():
                 return False
 
         experiment_task = DummyTask()
-        robot = Robot()
+        robot = Robot(None, "")
         await robot.init()
         await robot.stop()
         state = STATE_STOPPED
@@ -312,7 +314,7 @@ async def main():
         if ws_task.done():
             ws_task = asyncio.create_task(ws_handler())
 
-        if last_telemetry + 5 < time.time():
+        if last_telemetry + 3 < time.time():
             send_queue.append(
                 WS_TELEMETRY + struct.pack("16sB", experiment_hash, state)
             )
