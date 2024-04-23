@@ -34,9 +34,9 @@ y0 = [S0, I0, R0]
 sol = solve_ivp(sir_model, [min(t), max(t)], y0, t_eval=t)
 
 # Plot the data
-plt.plot(sol.t, sol.y[0], 'b', label='Mottagliga')
-plt.plot(sol.t, sol.y[1], 'r', label='Infekterade')
-plt.plot(sol.t, sol.y[2], 'g', label='Återställda')
+plt.plot(sol.t, sol.y[0], 'b', label='Mottagliga', linestyle="solid")
+plt.plot(sol.t, sol.y[1], 'g', label='Infekterade', linestyle="dashed")
+plt.plot(sol.t, sol.y[2], 'r', label='Återställda', linestyle="dotted")
 plt.title(f"SIR-simulering med $\\beta$ = {round(beta,1)} och $\\nu$ = {round(nu,1)}")
 plt.xlabel('Tid (Minuter)')
 plt.ylabel('Antal individer')
