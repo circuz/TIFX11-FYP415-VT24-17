@@ -1,8 +1,13 @@
+import matplotlib as mpl 
+# mpl.use('pgf')
+
 import pandas as pd
 import numpy as np
+from scipy.spatial.distance import pdist, squareform
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
-from matplotlib.animation import FuncAnimation
+from matplotlib.lines import Line2D
+plt.style.use('seaborn-v0_8')
 
 def process__and_plot_frame(frame):
     # Load data using the first column as index (robot IDs)
@@ -14,7 +19,7 @@ def process__and_plot_frame(frame):
     data = data[relevant_columns]
 
     # Set robots radius
-    radius = 55
+    radius = 70
 
     fig, ax = plt.subplots()
 
@@ -42,16 +47,16 @@ def process__and_plot_frame(frame):
             ax.add_patch(circle_interpolated)
 
     # Final plot adjustments
+    original = Line2D([], [], color='blue', linestyle='None', marker='o', label="Uppmätt robotposition")
+    interpolerad = Line2D([], [], color='red', linestyle='None', marker='D', label="Interpolerad robotposition")
+    plt.legend(handles=[original, interpolerad])
     ax.set_aspect('equal')
     ax.set_title(f'Robotarnas positioner vid bild {frame}')
     ax.set_xlabel('X-koordinat')
     ax.set_ylabel('Y-koordinat')
+    ax.set_xlim(-200,2800)
+    ax.set_ylim(-200,2800)
     plt.show()
+    # plt.savefig(f"./RandomWalk/Mätningar/levande_kristaller/levande_kristall_bild{frame}.pgf")
 
-
-process__and_plot_frame(30)
-
-
-# fig, ax = plt.subplots()
-# ani = FuncAnimation(fig, process__and_plot_frame, frames=88, interval=50)
-# plt.show()
+process__and_plot_frame(47)
