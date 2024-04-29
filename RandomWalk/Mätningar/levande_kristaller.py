@@ -49,7 +49,7 @@ def process__and_plot_frame(frame):
     plt.show()
 
 
-process__and_plot_frame(25)
+process__and_plot_frame(30)
 
 
 # fig, ax = plt.subplots()
