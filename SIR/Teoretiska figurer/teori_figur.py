@@ -1,4 +1,4 @@
-import matplotlib as mpl 
+import matplotlib as mpl
 # mpl.use('pgf')
 
 import numpy as np
@@ -7,17 +7,17 @@ plt.style.use('seaborn-v0_8')
 from scipy.integrate import solve_ivp
 
 # Parameters
-beta = 0.7 / 10  # transmission rate
-nu = 1 / 3  # recovery rate
+beta = 0.12  # transmission rate
+nu = 0.5  # recovery rate
 N = 30  # total population
 
 # Initial conditions
-S0 = 27
-I0 = 2
+S0 = 19
+I0 = 1
 R0 = 0
 
 # Time span
-t = np.linspace(0, 10, 1000) 
+t = np.linspace(0, 10, 1000)
 
 # The SIR model differential equations.
 def sir_model(t, y):
