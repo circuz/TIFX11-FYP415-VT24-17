@@ -1,5 +1,5 @@
 import matplotlib as mpl 
-# mpl.use('pgf')
+mpl.use('pgf')
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -55,7 +55,7 @@ def simulate_particles(num_particles, steps, radius, v0, box_size=10):
 num_particles = 25
 steps = 100
 particle_radius = 3
-v0 = 1
+v0 = 0
 box_size = 100
 
 # Run simulation
@@ -70,9 +70,9 @@ for i in range(num_particles):
     ax.add_artist(circle)
 plt.xlim(0, box_size)
 plt.ylim(0, box_size)
-plt.title(f'Simulering av levande kristaller där $v_0$ = {v0} m/s')
-plt.xlabel("X-koordinat")
-plt.ylabel("Y-koordinat")
-plt.gca().set_aspect('equal', adjustable='box')
+# plt.axis('off')
+ax.set_aspect('equal', adjustable='box')
+ax.set_xticklabels([])
+ax.set_yticklabels([])
 # plt.show()
 plt.savefig(f"./RandomWalk/Teoretiska figurer/levande_kristall_v0={v0}.pgf")
